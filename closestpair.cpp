@@ -91,35 +91,7 @@ float closestPair_aux(std::vector< Point > const& indices)
         std::sort(temppoints.begin(), temppoints.end(), xlessthan);
     }
 
-/*
-    std::sort(temppoints.begin(), temppoints.end(), xlessthan);
-    bool x = true;
-    float range = (temppoints.back().x - temppoints.front().x);
-    //std::cout << "end = " << temppoints.back() << ", front = " << temppoints.front() << std::endl;
-    if (range >= -0.001f && range <= 0.001f)
-    {
-        std::sort(temppoints.begin(), temppoints.end(), ylessthan);
-        x = false;
-        range = (temppoints.back().y - temppoints.front().y);
-        if (range >= -0.001f && range <= 0.001f)
-            return 0.0f;
-    }*/
 
-/*
-    for (int i = 0; i < size; i++)
-    {
-        //std::cout << " fuck" << indices[i] << std::endl;
-        std::cout << temppoints[i] << std::endl;
-    } */
-
-	//std::sort(indices.begin(), indices.end(), xlessthan);
-	
-	//float middle = (indices.end().x - indices.front().x) / 2;
-	
-	//if (middle == 0)
-	//	std::sort(indices.begin(), indices.end(), ylessthan);
-
-	// split points in half
 	std::vector<Point> Left;
 	std::vector<Point> Right;
 
@@ -153,16 +125,6 @@ float closestPair_aux(std::vector< Point > const& indices)
         }
     }
 
-    
-	/*
-	for (int i = 0; i < size / 2; i++)
-	{
-		Left.push_back(temppoints[i]);
-	}
-	for (int i = size / 2; i < size; i++)
-	{
-		Right.push_back(temppoints[i]);
-	} */
 	
 	
 	// check distance
@@ -171,15 +133,7 @@ float closestPair_aux(std::vector< Point > const& indices)
 	float distance1 = closestPair_aux(Left);
 	float distance2 = closestPair_aux(Right);
 	float min_dist = std::min(distance1, distance2);
-	/*
-	for (int i = 0; i < sizeleft; i++)
-	{
-		for (int j = 0; j < sizeright; j++)
-		{
-			if (distance(Left[i], Right[j]) < min_dist)
-				min_dist = distance(Left[i], Right[j]);
-		}
-	}*/
+	
     for (int i = 0; i < sizeleft && i < sizeright; i++)
     {
         int index = static_cast<int>(sizeleft) - 1 - i;
@@ -187,13 +141,6 @@ float closestPair_aux(std::vector< Point > const& indices)
         if (currdistance < min_dist)
             min_dist = currdistance;
     }
-    /*
-    float distanceofpoints = distance(Left.back(), Right.front());
-    if (distanceofpoints < min_dist)
-    {
-        min_dist = distanceofpoints;
-    }*/
-
 
 	return min_dist;
 }
