@@ -1,6 +1,16 @@
-//
-// Created by jacob on 11/16/2022.
-//
+/**
+ * e-dijkstra.cpp
+ * Jacob Lon
+ *
+ * /brief
+ *      This data structure finds every node that can be traversed by an "electric vehicle" with a battery
+ *      that has a given max range and recharge limitation.
+ *      Find shortest path to each node with a max range on the battery and recharges, which fill the battery back up
+ *      max capacity aka max range
+ *      My process for solving this included first finding each traversable node, then with range and no recharge limit,
+ *      then eventually added recharge limit
+ *
+ */
 #include "stdio.h"
 #include "iostream"
 #include "fstream"
@@ -9,7 +19,11 @@
 #include <map>
 #include "limits"
 
+//////////////////////////// Data Structures //////////////////////////////////////////////////////////////////////////
 
+/**
+ * Defines connections between nodes
+ */
 class Edge
 {
 	public:
@@ -22,12 +36,19 @@ class Edge
 		
 		bool operator<(Edge rhs) { return this->weight < rhs.weight; }
 		
-		int start;
-		int end;
-		int weight;
+		int start; // represents parent node
+		int end; // represents adjacent node
+		int weight; // represents "distance to travel" between nodes
 	private:
 };
 
+/**
+ * represents the electric vehicles battery
+ *
+ * /brief
+ *      within the algorithm multiple instances of "Battery" are created to represent the same vehicles different
+ *      possible paths and steps
+ */
 class Battery
 {
 	public:
@@ -47,6 +68,7 @@ class Battery
             return range + (charges * maxrange);
         }
 
+        // if battery doesnt have enough range, recharge
         void increment(int weight, const int maxrange, Battery prev)
         {
             if (prev.range + weight > maxrange)
@@ -60,11 +82,14 @@ class Battery
             }
         }
 		
-		int charges;
-		int range;
+		int charges; // amount of times the vehicle can recharge
+		int range; // the max range of one charge
 	private:
 };
 
+/**
+ * Node, or intersection or city or station etc., that the vehicle will be traveling to
+ */
 class Vertex
 {
 	public:
@@ -75,14 +100,24 @@ class Vertex
 		explicit Vertex(int id_) : id(id_), evaluated(false), neighbors()
 		{}
 		
-		int id;
+		int id; // node value read in from input
 		bool evaluated;
 		std::vector<Edge> neighbors;
 	private:
 };
 
+//////////////////////////// Data Structures End //////////////////////////////////////////////////////////////////////
+
+
+// function head for primary algorithm
 bool dijkstra(const std::vector<Vertex*>& vertices, Vertex* source, int range, int charges);
 
+/**
+ * operator overload for Battery values
+ * @param lhs
+ * @param rhs
+ * @return true if lhs has used less range
+ */
 bool operator<(Battery lhs, Battery rhs)
 {
 	if (lhs.charges < rhs.charges)
@@ -102,6 +137,8 @@ bool operator<(Battery lhs, Battery rhs)
 	
 	return false;
 }
+
+//////////////////////////// Helper Functions /////////////////////////////////////////////////////////////////////////
 
 bool edgeweight(Edge lhs, Edge rhs) { return lhs < rhs; }
 
@@ -123,6 +160,38 @@ void printvertices(std::map<int, std::vector<Edge>> vertices)
 	}
 }
 
+/**
+ *
+ * @param options
+ * @param source
+ * @param maxrange
+ * @return pointer to next best vertex to solve for
+ */
+Vertex* GetBestVertex(std::map<Vertex*, Battery> options, Vertex* source, const int maxrange)
+{
+    Battery tempB(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+    Vertex* tempV = source;
+
+    for (auto option : options)
+    {
+        if (option.second.value(maxrange) < tempB.value(maxrange) && !option.first->evaluated)
+        {
+            tempB = option.second;
+            tempV = option.first;
+        }
+    }
+
+    return tempV;
+}
+
+//////////////////////////// Helper Functions End /////////////////////////////////////////////////////////////////////
+
+/**
+ * loading file and reading input
+ * @param filename
+ * @param range
+ * @return false if file load failed
+ */
 bool e_dijkstra( char const * filename, int range)
 {
 	std::fstream input(filename, std::fstream::in);
@@ -133,9 +202,9 @@ bool e_dijkstra( char const * filename, int range)
 		return false;
 	}
 	
-	int locations = 0;
+	int locations = 0; // vertex
 	int recharges = 0;
-	int numedges = 0;
+	int numedges = 0; // total number of edges that exist in the whole map
 	std::vector<Vertex*> vertices2;
 	
 	input >> locations;
@@ -147,6 +216,8 @@ bool e_dijkstra( char const * filename, int range)
         vertices2.push_back(new Vertex(i));
     }
 
+    // data stored by edge, one line per edge
+    // each line represents one edge between two vertices, vertices maybe repeat, edges do not
 	for (int i = 0; i < numedges; i++)
 	{
 		Edge edge;
@@ -181,23 +252,14 @@ bool e_dijkstra( char const * filename, int range)
     return result;
 }
 
-Vertex* GetBestVertex(std::map<Vertex*, Battery> options, Vertex* source, const int maxrange)
-{
-    Battery tempB(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-    Vertex* tempV = source;
-
-    for (auto option : options)
-    {
-        if (option.second.value(maxrange) < tempB.value(maxrange) && !option.first->evaluated)
-        {
-            tempB = option.second;
-            tempV = option.first;
-        }
-    }
-
-    return tempV;
-}
-
+/**
+ *
+ * @param vertices list of node pointers
+ * @param source starting node
+ * @param range max range of batteries
+ * @param charges max charges of batteries
+ * @return true if all nodes traversable
+ */
 bool dijkstra(const std::vector<Vertex*>& vertices, Vertex* source, const int range, const int charges)
 {
 	std::map<Vertex*, Battery> distances;
@@ -211,6 +273,7 @@ bool dijkstra(const std::vector<Vertex*>& vertices, Vertex* source, const int ra
 	
 	distances[source] = Battery(0,0);
 
+    // foreach isn't necessary but I like/liked doing this and it didn't have any important drawbacks
     for (auto vertex : vertices)
     {
         Vertex* vert = vertex; // it keeps complaining and I cant be bothered to come up with a use for it
